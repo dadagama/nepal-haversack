@@ -1,0 +1,57 @@
+{
+  "name": "@al/haversack",
+  "version": "0.9.0",
+  "description": "An array of lightweight utilities and common types shared across NEPAL libraries and applications based on them.",
+  "main": "index.js",
+  "scripts": {
+    "test": "karma start",
+    "test-watch": "karma start --no-single-run --auto-watch",
+    "build-dev": "npm run clean &&  tsc && webpack --mode=development",
+    "build": "webpack",
+    "prebuild": "npm run clean && npm run lint && tsc",
+    "lint": "tslint -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "author": {
+      "name": "Kevin Nielsen",
+      "email": "knielsen@alertlogic.com"
+  },
+  "maintainer": {
+      "name": "Alert Logic NPM Team",
+      "email": "npm@alertlogic.com"
+  },
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/alertlogic/nepal-haversack"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "ajv": "^6.10.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.6",
+    "chai": "^4.2.0",
+    "karma": "^4.1.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-cli": "^2.0.0",
+    "karma-mocha": "^1.3.0",
+    "karma-typescript": "^4.0.0",
+    "mocha": "^6.1.4",
+    "tslint": "^5.16.0",
+    "tslint-config-airbnb": "^5.11.1",
+    "typescript": "^3.4.5",
+    "webpack": "^4.30.0",
+    "webpack-cli": "^3.3.1"
+  },
+  "files": [
+    "dist/**/*",
+    "triggers.js",
+    "locator.js",
+    "promises.js",
+    "schema-validator.js",
+    "utility.js",
+    "triggers.js"
+  ]
+}

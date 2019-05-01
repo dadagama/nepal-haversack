@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "baseUrl": "",
+    "paths": {
+        "@al/haversack": [ "./src" ],
+        "@al/haversack/*": [ "./src/*" ]
+    },
+    "outDir": "./dist/commonjs",
+    "module": "commonjs",
+    "target": "es5",
+    "declaration": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "declarationDir": "./dist/typings/",
+    "lib": [
+      "es6",
+      "es2015",
+      "dom"
+    ]
+  },
+  "include": [
+    "./src/**/*.ts"
+  ]
+}
