@@ -1,6 +1,6 @@
 {
   "name": "@al/haversack",
-  "version": "0.9.0",
+  "version": "1.0.0-beta.1",
   "description": "An array of lightweight utilities and common types shared across NEPAL libraries and applications based on them.",
   "main": "index.js",
   "scripts": {
@@ -14,16 +14,16 @@
     "prepublishOnly": "npm run build"
   },
   "author": {
-      "name": "Kevin Nielsen",
-      "email": "knielsen@alertlogic.com"
+    "name": "Kevin Nielsen",
+    "email": "knielsen@alertlogic.com"
   },
   "maintainer": {
-      "name": "Alert Logic NPM Team",
-      "email": "npm@alertlogic.com"
+    "name": "Alert Logic NPM Team",
+    "email": "npm@alertlogic.com"
   },
   "repository": {
-      "type": "git",
-      "url": "https://github.com/alertlogic/nepal-haversack"
+    "type": "git",
+    "url": "https://github.com/alertlogic/nepal-haversack"
   },
   "license": "MIT",
   "dependencies": {
