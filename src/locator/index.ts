@@ -1,1 +1,6 @@
-export { AlLocatorService } from './al-locator-service';
+export {
+    AlLocation,
+    AlLocationContext,
+    AlLocationDescriptor,
+    AlLocatorService
+} from './al-locator-service';
