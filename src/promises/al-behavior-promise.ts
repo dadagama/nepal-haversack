@@ -5,6 +5,10 @@
  *
  *  This class exposes the basic surface area of a Promise -- it is `then`able -- but allows the resolved value to change
  *  if necessary.
+ *
+ *  @author Big Red <knielsen@alertlogic.com>
+ *
+ *  @copyright 2019 Alert Logic, Inc.
  */
 
 export class AlBehaviorPromise<ResultType>
@@ -31,7 +35,7 @@ export class AlBehaviorPromise<ResultType>
     /**
      * Attaches a resolve/reject listener to the underlying promise.
      */
-    public then( callback, error = undefined ) {
+    public then( callback, error = undefined ):Promise<any> {       /* NOTE: for some reason, using `ResultType` here breaks compilation.  I have no idea why, but it makes me rather sad :| */
         return this.promise.then( callback, error );
     }
 
