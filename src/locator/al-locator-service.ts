@@ -114,7 +114,7 @@ export interface AlLocationDescriptor
     _fullURI?:string;               //  Fully calculated URI of the node (for caching purposes)
 }
 
-class AlLocatorMatrix
+export class AlLocatorMatrix
 {
     nodes:{[locTypeId:string]:AlLocationDescriptor} = {};
     _nodeMap:{[hashKey:string]:AlLocationDescriptor} = {};
