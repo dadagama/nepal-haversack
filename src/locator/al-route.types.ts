@@ -19,11 +19,14 @@ export interface AlRoutingHost
     /* Locator matrix */
     locator: AlLocatorMatrix;
 
+    /* Routing parameters */
+    routeParameters: {[parameter:string]:string};
+
     /* Asks the host to execute a given route's action. */
     dispatch(route:AlRoute):void;
 
     /* Asks the host to evaluate whether a given routing condition is true or false */
-    evaluate(AlRouteCondition):boolean;
+    evaluate(condition:AlRouteCondition):boolean;
 }
 
 /**
@@ -111,7 +114,10 @@ export class AlRoute {
     /* Arbitrary properties */
     properties: {[property:string]:any} = {};
 
-    /* Cached target */
+    /* Base of target URL */
+    baseHREF:string = null;
+
+    /* Cached target URL */
     href:string = null;
 
     constructor( host:AlRoutingHost, definition:AlRouteDefinition, parent:AlRoute = null ) {
@@ -137,31 +143,101 @@ export class AlRoute {
         }
     }
 
-    getProperty( propName:string, defaultValue:string = null ) {
+    getProperty( propName:string, defaultValue:any = null ):any {
         return this.properties.hasOwnProperty( propName ) ? this.properties[propName] : defaultValue;
     }
 
-    refresh( resolve:boolean = true ) {
+    /**
+     * Refreshes the state of a given route.
+     *
+     * @param {boolean} resolve If true, forces the calculated href and visibility properties to be recalculated.
+     *
+     * @returns {boolean} Returns true if the route (or one of its children) is activated, false otherwise.
+     */
+    refresh( resolve:boolean = false ):boolean {
+
+        /* Evaluate visibility */
         this.visible = this.definition.visible ? this.evaluateCondition( this.definition.visible ) : true;
 
-        for ( let i = 0; i < this.children.length; i++ ) {
-            let child = this.children[i];
-            child.refresh( resolve );
+        /* Evaluate children recursively, and deduce activation state from them. */
+        let childActivated = this.children.reduce(  ( activated, child ) => {
+                                                        return activated || child.refresh( resolve );
+                                                    },
+                                                    false );
+
+        /* Evaluate fully qualified href, if visible/relevant */
+        if ( this.visible && ( resolve || this.href === null ) && this.definition.action && this.definition.action.type === 'link' ) {
+            if ( ! this.evaluateHref() ) {
+                this.visible = false;
+                this.activated = false;
+                return;
+            }
         }
 
-        if ( this.visible && ( resolve || this.href === null ) && this.definition.action ) {
-            const action = this.definition.action;
-            if ( action.type === 'link' ) {
-                let node = this.host.locator.getNode( action.location );
-                if ( node ) {
-                    this.href = node.uri + ( action.path ? action.path : '' );
-                } else {
-                    console.warn(`Warning: cannot link to unknown location '${action.location}'` );
-                    this.visible = false;
+        this.activated = childActivated;
+
+        //  activation test for path match
+        if ( ! this.activated ) {
+            this.evaluateActivation();
+        }
+
+        //  bubble to parent?
+        if ( this.definition.bubble && this.parent ) {
+            this.parent.activated = this.parent.activated || this.activated;
+            this.parent.href = this.href;
+        }
+
+        return this.activated;
+    }
+
+    evaluateHref():boolean {
+        let action = this.definition.action;
+        let node = this.host.locator.getNode( action.location );
+        if ( ! node ) {
+            console.warn(`Warning: cannot link to unknown location '${action.location}'` );
+            return false;
+        }
+
+        this.baseHREF = node.uri;
+        let path = action.path ? action.path : '';
+        let missing = false;
+        path = path.replace( /\:[a-zA-Z_]+/g, match => {
+            let variableId = match.substring( 1 );
+            if ( this.host.routeParameters.hasOwnProperty( variableId ) ) {
+                return this.host.routeParameters[variableId];
+            } else {
+                missing = true;
+                return `:${variableId}`;
+            }
+        } );
+        this.href = this.baseHREF + path;
+        return ! missing;
+    }
+
+    evaluateActivation():boolean {
+        if ( ! this.href ) {
+            return false;
+        }
+        if ( this.host.currentUrl.indexOf( this.baseHREF ) === 0 ) {
+            // remove parameters from href
+            let noParamsHref = this.href.indexOf('?') === -1
+                                    ? this.href
+                                    : this.href.substring( 0, this.href.indexOf('?') );
+            if ( noParamsHref.indexOf( this.host.currentUrl ) === 0 && this.host.currentUrl.indexOf( noParamsHref ) === 0 ) {
+                //  If our full URL *contains* the current URL, we are activated
+                this.activated = true;
+            } else if ( this.definition.matches ) {
+                //  If we match any other match patterns, we are activated
+                for ( let m = 0; m < this.definition.matches.length; m++ ) {
+                    let regexp = ( "^" + this.baseHREF + this.definition.matches[m] + "$" ).replace("/", "\\/" );
+                    let comparison = new RegExp( regexp );
+                    if ( comparison.test( this.host.currentUrl ) ) {
+                        this.activated = true;
+                    }
                 }
             }
         }
-        this.children.forEach( child => child.refresh( resolve ) );
+        return this.activated;
     }
 
     evaluateCondition( condition:AlRouteCondition ):boolean {
@@ -186,6 +262,4 @@ export class AlRoute {
             return this.host.evaluate( condition );
         }
     }
-
-
 }

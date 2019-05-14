@@ -10,6 +10,33 @@ describe( 'AlLocatorMatrix', () => {
     ];
     let locator:AlLocatorMatrix;
 
+    describe( 'utility methods', () => {
+        beforeEach( () => {
+            locator = new AlLocatorMatrix();
+        } );
+
+        it( "should escape uri patterns in the expected way", () => {
+            expect( locator.escapeLocationPattern( "https://console.overview.alertlogic.com" ) ).to.equal( "^https:\\/\\/console\\.overview\\.alertlogic\\.com.*$" );
+            expect( locator.escapeLocationPattern( "https://dashboards.pr-*.ui-dev.alertlogic.com" ) ).to.equal( "^https:\\/\\/dashboards\\.pr\\-[a-zA-Z0-9_]+\\.ui\\-dev\\.alertlogic\\.com.*$" );
+        } );
+
+        it( "should properly resolve URI patterns to location nodes", () => {
+            locator.setLocations( nodes );
+
+            let node = locator.getNodeByURI( "https://console.overview.alertlogic.co.uk/#/remediations-scan-status/2" );
+            expect( node ).to.be.an( "object" );
+            expect( node.environment ).to.equal( "production" );
+            expect( node.residency ).to.equal( "EMEA" );
+            expect( node.locTypeId ).to.equal( AlLocation.OverviewUI );
+
+            node = locator.getNodeByURI( "https://incidents.pr-12.ui-dev.alertlogic.com/#/summary/12345678?aaid=12345678&locid=defender-uk-newport" );
+            expect( node ).to.be.an( "object" );
+            expect( node.environment ).to.equal( "integration" );
+            expect( node.residency ).to.equal( undefined );
+            expect( node.locTypeId ).to.equal( AlLocation.IncidentsUI );
+        } );
+    } );
+
     describe( 'given production-like location descriptors for the overview application', () => {
 
         beforeEach( () => {

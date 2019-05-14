@@ -54,6 +54,7 @@ export class AlLocation
     public static HudUI             = "insight:hud";
     public static IrisUI            = "insight:iris";
     public static SearchUI          = "cd17:search";
+    public static DashboardsUI      = "cd19:dashboards";
 
     /**
      * Miscellaneous/External Resources
@@ -84,7 +85,8 @@ export class AlLocation
             {
                 locTypeId: locTypeId,
                 environment: 'integration',
-                uri: `https://console.${appCode}.product.dev.alertlogic.com`
+                uri: `https://console.${appCode}.product.dev.alertlogic.com`,
+                aliases: [ `https://${appCode}.pr-*.ui-dev.alertlogic.com` ]
             },
             {
                 locTypeId: locTypeId,
@@ -103,6 +105,7 @@ export interface AlLocationDescriptor
     uri:string;                     //  URI of the entity
     residency?:string;              //  A data residency domain
     environment?:string;            //  'production, 'integration', 'development'...
+    aliases?:string[];              //  A list of
 
     productType?:string;            //  'defender' or 'insight' (others perhaps in the future?)
     aspect?:string;                 //  'ui' or 'api'
@@ -116,6 +119,7 @@ export interface AlLocationDescriptor
 
 export class AlLocatorMatrix
 {
+    uriMap:{[pattern:string]:{matcher:RegExp,location:AlLocationDescriptor}} = {};
     nodes:{[locTypeId:string]:AlLocationDescriptor} = {};
     _nodeMap:{[hashKey:string]:AlLocationDescriptor} = {};
 
@@ -293,20 +297,12 @@ export class AlLocatorMatrix
      *  Resolves a literal URI to a service node.
      */
     public getNodeByURI( targetURI:string ):AlLocationDescriptor {
-        let matchingNode = null;
-        for ( let k in this._nodeMap ) {
-            if ( this._nodeMap.hasOwnProperty( k ) ) {
-                let candidateNode = this._nodeMap[k];
-                candidateNode._fullURI = null;  //  force re-resolution of URI
-                let uri = this.resolveNodeURI( candidateNode );
-                if ( uri && ( uri.indexOf( targetURI ) === 0 || targetURI.indexOf( uri ) === 0 ) ) {
-                    if ( matchingNode === null || matchingNode._fullURI.length < uri.length ) {
-                        matchingNode = candidateNode;
-                    }
-                }
+        for ( let k in this.uriMap ) {
+            if ( this.uriMap[k].matcher.test( targetURI ) ) {
+                return this.uriMap[k].location;
             }
         }
-        return matchingNode;
+        return null;
     }
 
     /**
@@ -330,6 +326,7 @@ export class AlLocatorMatrix
             this._nodeMap[`${node.locTypeId}-${node.environment}-*`] = node;
         }
         this._nodeMap[`${node.locTypeId}-*-*`] = node;
+        this.addUriMapping( node );
     }
 
     /**
@@ -357,6 +354,33 @@ export class AlLocatorMatrix
         node._fullURI = uri;
         return uri;
     }
+
+    /**
+     * Adds pattern maches for a node's domain and domain aliases, so that URLs can be easily and efficiently mapped back to their nodes
+     */
+    addUriMapping( node:AlLocationDescriptor ) {
+        let pattern = this.escapeLocationPattern( node.uri );
+        this.uriMap[pattern] = { matcher: new RegExp( pattern ), location: node };
+        if ( node.aliases ) {
+            node.aliases.map( alias => {
+                pattern = this.escapeLocationPattern( alias );
+                this.uriMap[pattern] = { matcher: new RegExp( pattern ), location: node };
+            } );
+        }
+    }
+
+    /**
+     * Escapes a domain pattern.
+     *
+     * All normal regex characters are escaped; * is converted to [a-zA-Z0-9_]+; and the whole expression is wrapped in ^....*$.
+     */
+    escapeLocationPattern( uri:string ):string {
+        let pattern = "^" + uri.replace(/[-\/\\^$.()|[\]{}]/g, '\\$&');     //  escape all regexp characters except *, add anchor
+        pattern = pattern.replace( /\*/, "[a-zA-Z0-9_]+" );                 //  convert * wildcard into group match with 1 or more characters
+        pattern += ".*$";                                                   //  add filler and terminus anchor
+        return pattern;
+    }
+
 }
 
 export const AlLocatorService = new AlLocatorMatrix();
