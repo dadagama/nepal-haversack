@@ -70,7 +70,7 @@ export class AlCabinet
         if ( AlCabinet.openCabinets.hasOwnProperty( name ) ) {
             return AlCabinet.openCabinets[name];
         }
-        let cabinet = new AlCabinet( name, {}, AlCabinet.PERSISTENT );
+        let cabinet = new AlCabinet( name, {}, AlCabinet.EPHEMERAL );
         try {
             if ( sessionStorage ) {
                 let content = sessionStorage.getItem( name );
@@ -97,7 +97,7 @@ export class AlCabinet
         if ( AlCabinet.openCabinets.hasOwnProperty( name ) ) {
             return AlCabinet.openCabinets[name];
         }
-        let cabinet = new AlCabinet( name, {}, AlCabinet.PERSISTENT );
+        let cabinet = new AlCabinet( name, {}, AlCabinet.LOCAL );
         AlCabinet.openCabinets[name] = cabinet;
         return cabinet;
     }
@@ -114,7 +114,7 @@ export class AlCabinet
 
     public get( property:string, defaultValue:any = null, disableExpiration:boolean = false ):any {
         if ( ! this.data.hasOwnProperty( property ) ) {
-            return this.data[property];
+            return defaultValue;
         }
         let currentTS = + new Date();
         if ( ! disableExpiration && ( this.data[property].expires > 0 && this.data[property].expires < currentTS ) ) {
