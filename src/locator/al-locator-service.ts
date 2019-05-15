@@ -173,7 +173,7 @@ export class AlLocatorMatrix
 
         if ( typeof( actingUri ) === 'boolean' ) {
             if ( typeof( window ) !== 'undefined' ) {
-                actingUri = window.location.origin + ( window.location.pathname && window.location.pathname.length > 1 ) ? window.location.pathname : '';
+                actingUri = window.location.origin + ( ( window.location.pathname && window.location.pathname.length > 1 ) ? window.location.pathname : '' );
             } else {
                 actingUri = "http://localhost:9999";
             }
@@ -183,10 +183,12 @@ export class AlLocatorMatrix
          *  and updating the ambient context to match its environment and data residency attributes.  It is
          *  opaque for a reason :)
          */
+        console.log("Determining active context from URI [%s]", actingUri );
         if ( actingUri ) {
             this.actingUri = actingUri;
             this.actor = this.getNodeByURI( actingUri );
             if ( this.actor ) {
+                console.log("    - Found matching node", this.actor );
                 this.setContext( {
                     environment: this.actor.environment || this.context.environment,
                     residency: this.actor.residency || this.context.residency
