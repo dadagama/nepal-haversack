@@ -359,8 +359,12 @@ export class AlLocatorMatrix
      * Adds pattern maches for a node's domain and domain aliases, so that URLs can be easily and efficiently mapped back to their nodes
      */
     addUriMapping( node:AlLocationDescriptor ) {
-        let pattern = this.escapeLocationPattern( node.uri );
-        this.uriMap[pattern] = { matcher: new RegExp( pattern ), location: node };
+        let pattern:string;
+
+        if ( typeof( node.uri ) === 'string' && node.uri.length > 0 ) {
+            let pattern = this.escapeLocationPattern( node.uri );
+            this.uriMap[pattern] = { matcher: new RegExp( pattern ), location: node };
+        }
         if ( node.aliases ) {
             node.aliases.map( alias => {
                 pattern = this.escapeLocationPattern( alias );
