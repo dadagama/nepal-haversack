@@ -101,7 +101,11 @@ export class AlTriggerStream
         }
         const bucket = this.get( event.constructor.name );
         for ( let listenerId in bucket ) {
-            bucket[listenerId]( event, listenerId );
+            try {
+                bucket[listenerId]( event, listenerId );
+            } catch( e ) {
+                console.warn(`Trigger callback for event ${event.constructor.name} throw exception: ${e.message}; ignoring.` );
+            }
         }
 
         return this.downstream ? this.downstream.trigger( event ) : event;
