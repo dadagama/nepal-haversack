@@ -5,7 +5,7 @@ import { AlTriggerStream, AlTriggeredEvent } from '../src/triggers';
 class EventType1 extends AlTriggeredEvent
 {
     constructor() {
-        super();
+        super( "EventType1");
     }
 }
 
@@ -32,7 +32,7 @@ describe( 'AlTriggerStream', () => {
     it("should allow 'bottled' initialization", () => {
         const stream = new AlTriggerStream( false );
 
-        let subscriptionKey = stream.attach( EventType1, emptyHandler );
+        let subscriptionKey = stream.attach( "EventType1", emptyHandler );
 
         stream.trigger( new EventType1() );
 
@@ -47,13 +47,13 @@ describe( 'AlTriggerStream', () => {
     it("should allow one stream to siphon the events from another stream", () => {
         const stream = new AlTriggerStream( false );
 
-        let subscriptionKey = stream.attach( EventType1, emptyHandler );
+        let subscriptionKey = stream.attach( "EventType1", emptyHandler );
 
         stream.trigger( new EventType1() );
 
         const stream2 = new AlTriggerStream();
 
-        let subscriptionKey2 = stream2.attach( EventType1, emptyHandler );
+        let subscriptionKey2 = stream2.attach( "EventType1", emptyHandler );
 
         stream2.siphon( stream );
 
@@ -69,11 +69,11 @@ describe( 'AlTriggerStream', () => {
     it("should collate and return responses systematically", () => {
         const stream = new AlTriggerStream();
 
-        const subscriptionKey = stream.attach( EventType1, ( event ) => {
+        const subscriptionKey = stream.attach( "EventType1", ( event ) => {
             event.respond( true );
         } );
 
-        const subscriptionKey2 = stream.attach( EventType1, ( event ) => {
+        const subscriptionKey2 = stream.attach( "EventType1", ( event ) => {
             event.respond( "Kevin" );
         } );
 

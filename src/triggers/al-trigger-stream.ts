@@ -7,11 +7,18 @@
 export class AlTriggeredEvent
 {
 
-    public name:string;
+    public eventTypeName:string;
     public responses:any[] = [];
 
-    constructor( name:string = null ) {
-        this.name = name || this.constructor.name;
+    constructor( syntheticName:string = null ) {
+        this.eventTypeName = syntheticName || this.constructor.name;
+    }
+
+    /**
+     * Retrieves type name
+     */
+    public getEventType() {
+        return this.eventTypeName;
     }
 
     /**
@@ -63,16 +70,15 @@ export class AlTriggerStream
         this.flowing = flow;
     }
 
-    public get( type:any ) {
-        let typeName = typeof( type ) === 'string' ? type : type.name;
-        if ( ! this.items.hasOwnProperty( typeName ) ) {
-            this.items[typeName] = {};
+    public getBucket( eventTypeName:string ) {
+        if ( ! this.items.hasOwnProperty( eventTypeName ) ) {
+            this.items[eventTypeName] = {};
         }
-        return this.items[typeName];
+        return this.items[eventTypeName];
     }
 
-    public attach( type:any, callback:AlTriggeredEventCallback ):string {
-        let bucket = this.get( type );
+    public attach( eventType:string, callback:AlTriggeredEventCallback ):string {
+        let bucket = this.getBucket( eventType );
         const listenerId:string = `sub_${++this.subscriptionCount}`;
         bucket[listenerId] = callback;
         return listenerId;
@@ -95,18 +101,20 @@ export class AlTriggerStream
     }
 
     public trigger( event:AlTriggeredEvent ):AlTriggeredEvent {
+        let eventType = event.getEventType();
         if ( ! this.flowing ) {
             this.captured.push( event );
             return event;
         }
-        const bucket = this.get( event.constructor.name );
-        for ( let listenerId in bucket ) {
+        const bucket = this.getBucket( eventType );
+        let listenerIdList = Object.keys( bucket );
+        listenerIdList.forEach( listenerId => {
             try {
                 bucket[listenerId]( event, listenerId );
             } catch( e ) {
                 console.warn(`Trigger callback for event ${event.constructor.name} throw exception: ${e.message}; ignoring.` );
             }
-        }
+        } );
 
         return this.downstream ? this.downstream.trigger( event ) : event;
     }

@@ -54,6 +54,7 @@ export class AlLocation
     public static HudUI             = "insight:hud";
     public static IrisUI            = "insight:iris";
     public static SearchUI          = "cd17:search";
+    public static HealthUI          = "cd17:health";
     public static DashboardsUI      = "cd19:dashboards";
 
     /**
@@ -183,12 +184,10 @@ export class AlLocatorMatrix
          *  and updating the ambient context to match its environment and data residency attributes.  It is
          *  opaque for a reason :)
          */
-        console.log("Determining active context from URI [%s]", actingUri );
         if ( actingUri ) {
             this.actingUri = actingUri;
             this.actor = this.getNodeByURI( actingUri );
             if ( this.actor ) {
-                console.log("    - Found matching node", this.actor );
                 this.setContext( {
                     environment: this.actor.environment || this.context.environment,
                     residency: this.actor.residency || this.context.residency

@@ -29,7 +29,7 @@ describe( 'AlLocatorMatrix', () => {
             expect( node.residency ).to.equal( "EMEA" );
             expect( node.locTypeId ).to.equal( AlLocation.OverviewUI );
 
-            node = locator.getNodeByURI( "https://incidents.pr-12.ui-dev.alertlogic.com/#/summary/12345678?aaid=12345678&locid=defender-uk-newport" );
+            node = locator.getNodeByURI( "https://incidents-pr-12.ui-dev.product.dev.alertlogic.com/#/summary/12345678?aaid=12345678&locid=defender-uk-newport" );
             expect( node ).to.be.an( "object" );
             expect( node.environment ).to.equal( "integration" );
             expect( node.residency ).to.equal( undefined );
