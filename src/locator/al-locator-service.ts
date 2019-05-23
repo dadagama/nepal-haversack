@@ -55,6 +55,7 @@ export class AlLocation
     public static IrisUI            = "insight:iris";
     public static SearchUI          = "cd17:search";
     public static HealthUI          = "cd17:health";
+    public static DisputesUI        = "cd17:disputes";
     public static DashboardsUI      = "cd19:dashboards";
 
     /**

@@ -6,7 +6,7 @@
  *  @copyright 2017 Alert Logic Inc.
  */
 
-import { AlLocatorMatrix } from './al-locator-service';
+import { AlLocatorMatrix, AlLocatorService } from './al-locator-service';
 
 /**
  * Any navigation host must provide these basic functions
@@ -30,13 +30,26 @@ export interface AlRoutingHost
 }
 
 /**
+ * This empty or "null" routing host is provided as a convenience for unit tests,
+ * debugging, and placeholder or empty menu structures.
+ */
+export const AlNullRoutingHost = {
+    currentUrl: '',
+    locator: AlLocatorService,
+    routeParameters: {},
+    dispatch: (route:AlRoute) => {},
+    evaluate: (condition:AlRouteCondition) => false
+}
+
+/**
  *  Conditional expressions
  */
 export interface AlRouteCondition
 {
     rule?:string;                       //  must be "any", "all", or "none"
-    conditions?:AlRouteCondition[];
-    entitlements?:string;
+    conditions?:AlRouteCondition[];     //  An array of child conditions to evaluate using the indicated rule
+    entitlements?:string;               //  An entitlement expression to evaluate
+    parameters:string[];                //  Route parameters
 }
 
 /**
@@ -75,6 +88,9 @@ export interface AlRouteDefinition {
     /* The caption of the menu item */
     caption:string;
 
+    /* Arbitrary properties */
+    properties: {[property:string]:any};
+
     /* The action to perform when the menu item is clicked.     */
     action?:AlRouteAction;
 
@@ -92,6 +108,9 @@ export interface AlRouteDefinition {
 }
 
 export class AlRoute {
+
+    /* The route's caption, echoed from its definition but possibly translated */
+    caption:string;
 
     /* The raw data of the route */
     definition:AlRouteDefinition;
@@ -123,11 +142,15 @@ export class AlRoute {
     constructor( host:AlRoutingHost, definition:AlRouteDefinition, parent:AlRoute = null ) {
         this.host       =   host;
         this.definition =   definition;
+        this.caption    =   definition.caption;
         this.parent     =   parent;
         if ( definition.children ) {
             for ( let i = 0; i < definition.children.length; i++ ) {
                 this.children.push( new AlRoute( host, definition.children[i], this ) );
             }
+        }
+        if ( definition.properties ) {
+            this.properties = Object.assign( this.properties, definition.properties );      //  definition properties provide the "starting point" for the route's properties, but remain immutable defaults
         }
         if ( parent === null ) {
             //  This effectively performs the initial refresh/state evaluation to occur once, after the top level item has finished populating
@@ -135,14 +158,39 @@ export class AlRoute {
         }
     }
 
+    /**
+     * Generates an empty route attached to a null routing host
+     */
+    public static empty() {
+        return new AlRoute( AlNullRoutingHost, { caption: "Nothing", properties: {} } );
+    }
+
+    /**
+     * Sets an arbitrary property for the route
+     */
     setProperty( propName:string, value:any ) {
         if ( value === undefined ) {
-            delete this.properties[propName];
+            this.deleteProperty( propName );
         } else {
             this.properties[propName] = value;
         }
     }
 
+    /**
+     * Deletes a property.  If the immutable route definition contains the same property, it will be
+     * restored.
+     */
+    deleteProperty( propName:string ) {
+        if ( this.definition.properties && this.definition.properties.hasOwnProperty( propName ) ) {
+            this.properties[propName] = this.definition.properties[propName];
+        } else {
+            delete this.properties[propName];
+        }
+    }
+
+    /**
+     * Retrieves a property.
+     */
     getProperty( propName:string, defaultValue:any = null ):any {
         return this.properties.hasOwnProperty( propName ) ? this.properties[propName] : defaultValue;
     }
@@ -188,6 +236,15 @@ export class AlRoute {
         }
 
         return this.activated;
+    }
+
+    summarize( showAll:boolean = true, depth:number = 0 ) {
+        if ( showAll || this.visible ) {
+            console.log( "    ".repeat( depth ) + `${this.definition.caption} (${this.visible ? 'visible' : 'hidden'}, ${this.activated ? 'activated' : 'inactive'})` );
+            for ( let i = 0; i < this.children.length; i++ ) {
+                this.children[i].summarize( showAll, depth + 1 );
+            }
+        }
     }
 
     evaluateHref():boolean {
