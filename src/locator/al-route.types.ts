@@ -33,13 +33,14 @@ export interface AlRoutingHost
  * This empty or "null" routing host is provided as a convenience for unit tests,
  * debugging, and placeholder or empty menu structures.
  */
+/* tslint:disable:variable-name */
 export const AlNullRoutingHost = {
     currentUrl: '',
     locator: AlLocatorService,
     routeParameters: {},
     dispatch: (route:AlRoute) => {},
     evaluate: (condition:AlRouteCondition) => false
-}
+};
 
 /**
  *  Conditional expressions
