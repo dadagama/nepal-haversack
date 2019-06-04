@@ -48,6 +48,7 @@
   },
   "files": [
     "dist/**/*",
+    "errors.js",
     "triggers.js",
     "locator.js",
     "promises.js",
