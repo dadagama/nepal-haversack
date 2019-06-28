@@ -386,7 +386,4 @@ export class AlLocatorMatrix
         pattern += ".*$";                                                   //  add filler and terminus anchor
         return pattern;
     }
-
 }
-
-export const AlLocatorService = new AlLocatorMatrix();

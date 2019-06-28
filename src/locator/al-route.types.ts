@@ -6,7 +6,7 @@
  *  @copyright 2017 Alert Logic Inc.
  */
 
-import { AlLocatorMatrix, AlLocatorService } from './al-locator-service';
+import { AlLocatorService } from './al-locator.service';
 
 /**
  * Any navigation host must provide these basic functions
@@ -15,9 +15,6 @@ export interface AlRoutingHost
 {
     /* Exposes the current URL of the application */
     currentUrl:string;
-
-    /* Locator matrix */
-    locator: AlLocatorMatrix;
 
     /* Routing parameters */
     routeParameters: {[parameter:string]:string};
@@ -36,7 +33,6 @@ export interface AlRoutingHost
 /* tslint:disable:variable-name */
 export const AlNullRoutingHost = {
     currentUrl: '',
-    locator: AlLocatorService,
     routeParameters: {},
     dispatch: (route:AlRoute) => {},
     evaluate: (condition:AlRouteCondition) => false
@@ -279,7 +275,7 @@ export class AlRoute {
      */
     evaluateHref():boolean {
         let action = this.definition.action;
-        let node = this.host.locator.getNode( action.location );
+        let node = AlLocatorService.getNode( action.location );
         if ( ! node ) {
             console.warn(`Warning: cannot link to unknown location '${action.location}'` );
             return false;
