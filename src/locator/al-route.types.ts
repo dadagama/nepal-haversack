@@ -50,7 +50,7 @@ export interface AlRouteCondition
     rule?:string;                       //  must be "any", "all", or "none"
     conditions?:AlRouteCondition[];     //  An array of child conditions to evaluate using the indicated rule
     entitlements?:string;               //  An entitlement expression to evaluate
-    parameters:string[];                //  Route parameters
+    parameters?:string[];               //  An array of route parameters that must be set for the route to be visible/active
 }
 
 /**
@@ -81,7 +81,6 @@ export interface AlRouteAction
 /**
  *  This is an abstract definition for a single menu item or menu container.
  */
-
 export interface AlRouteDefinition {
     /* A unique identifier for a route or item that can be invoked programmatically */
     id?:string;
@@ -108,6 +107,10 @@ export interface AlRouteDefinition {
     bubble?:boolean;
 }
 
+/**
+ * An AlRoute is an instantiated route definition, attached to a routing host, and capable of actually calculating target URLs based on context
+ * and handling navigation events.
+ */
 export class AlRoute {
 
     /* The route's caption, echoed from its definition but possibly translated */
@@ -166,6 +169,10 @@ export class AlRoute {
         return new AlRoute( AlNullRoutingHost, { caption: "Nothing", properties: {} } );
     }
 
+    public static link( host:AlRoutingHost, locationId:string, path:string, caption:string = "Link" ) {
+        return new AlRoute( host, { caption: caption, action: { type: "link", location: locationId, path: path }, properties: {} } );
+    }
+
     /**
      * Sets an arbitrary property for the route
      */
@@ -210,7 +217,7 @@ export class AlRoute {
 
         /* Evaluate children recursively, and deduce activation state from them. */
         let childActivated = this.children.reduce(  ( activated, child ) => {
-                                                        return activated || child.refresh( resolve );
+                                                        return child.refresh( resolve ) || activated;
                                                     },
                                                     false );
 
@@ -239,15 +246,37 @@ export class AlRoute {
         return this.activated;
     }
 
+    /**
+     * "Executes" a route.  This invokes the `dispatch` method on whatever routing host was provided to the menu at load time.
+     */
+    dispatch() {
+        this.refresh( true );
+        return this.host.dispatch( this );
+    }
+
+    /**
+     * Retrieves the full URL for a route, if applicable.
+     */
+    toHref() {
+        this.refresh( true );
+        return this.href;
+    }
+
+    /**
+     * Diagnostic method for logging the current hierarchy and state of a given navigational tree.
+     */
     summarize( showAll:boolean = true, depth:number = 0 ) {
         if ( showAll || this.visible ) {
-            console.log( "    ".repeat( depth ) + `${this.definition.caption} (${this.visible ? 'visible' : 'hidden'}, ${this.activated ? 'activated' : 'inactive'})` );
+            console.log( "    ".repeat( depth ) + `${this.definition.caption} (${this.visible ? 'visible' : 'hidden'}, ${this.activated ? 'activated' : 'inactive'})` + ( this.href ? ' - ' + this.href : '' ) );
             for ( let i = 0; i < this.children.length; i++ ) {
                 this.children[i].summarize( showAll, depth + 1 );
             }
         }
     }
 
+    /**
+     * Helper Messages
+     */
     evaluateHref():boolean {
         let action = this.definition.action;
         let node = this.host.locator.getNode( action.location );
@@ -315,9 +344,23 @@ export class AlRoute {
                 return ( passed === 0 ) ? true : false;
             }
             return false;
+        } else if ( condition.parameters ) {
+            return condition.parameters.reduce( ( present, parameterName ) => {
+                    return present && this.host.routeParameters.hasOwnProperty( parameterName );
+                }, true );
         } else {
             //  This condition refers to entitlement or other externally managed data -- ask the host to evaluate it.
             return this.host.evaluate( condition );
         }
     }
+}
+
+/**
+ * This is a top-level interface for the structure of a schema document, which is a set of compiled menus and behavioral rules.
+ */
+export interface AlNavigationSchema
+{
+    name: string;
+    description: string;
+    menus: {[menuId:string]:AlRouteDefinition};
 }

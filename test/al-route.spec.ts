@@ -45,7 +45,8 @@ describe( 'AlRoute', () => {
                     type: 'link',
                     location: AlLocation.OverviewUI,
                     path: '/#/remediations-scan-status/:accountId'
-                }
+                },
+                properties: {}
             } );
             menu.setProperty( 'kevin', 'was-here' );
             menu.setProperty( 'terriblySmart', false );
@@ -73,7 +74,8 @@ describe( 'AlRoute', () => {
                     type: 'link',
                     location: AlLocation.OverviewUI,
                     path: '/#/remediations-scan-status/:accountId'
-                }
+                },
+                properties: {}
             } );
             menu.refresh( true );
             expect( menu.baseHREF ).to.equal( "https://console.overview.alertlogic.com" );
@@ -87,7 +89,8 @@ describe( 'AlRoute', () => {
                     type: 'link',
                     location: AlLocation.OverviewUI,
                     path: '/#/path/:notExistingVariable/something'
-                }
+                },
+                properties: {}
             } );
             menu.refresh( true );
             expect( menu.baseHREF ).to.equal( "https://console.overview.alertlogic.com" );
@@ -101,7 +104,8 @@ describe( 'AlRoute', () => {
                     type: 'link',
                     location: "invalid:location",
                     path: '/#/path/:notExistingVariable/something'
-                }
+                },
+                properties: {}
             } );
             menu.refresh( false );
             expect( menu.baseHREF ).to.equal( null );
@@ -119,7 +123,8 @@ describe( 'AlRoute', () => {
                     type: 'link',
                     location: "cd17:overview",
                     path: '/#/path/:accountId'
-                }
+                },
+                properties: {}
             } );
             menu.refresh();
 
@@ -139,7 +144,8 @@ describe( 'AlRoute', () => {
                 type: "link",
                 location: AlLocation.OverviewUI,
                 path: '/#/child-route-1'
-            }
+            },
+            properties: {}
         };
         const child2:AlRouteDefinition = {
             caption: "Child 2",
@@ -154,7 +160,8 @@ describe( 'AlRoute', () => {
                 type: "link",
                 location: AlLocation.IncidentsUI,
                 path: '/#/child-route-2'
-            }
+            },
+            properties: {}
         };
         const child3:AlRouteDefinition = {
             caption: "Child 3",
@@ -170,7 +177,8 @@ describe( 'AlRoute', () => {
                 type: "link",
                 location: AlLocation.IncidentsUI,
                 path: '/#/child-route-3'
-            }
+            },
+            properties: {}
         };
 
         const menuDefinition:AlRouteDefinition = {
@@ -188,7 +196,8 @@ describe( 'AlRoute', () => {
                         child1,
                         child2,
                         child3
-                    ]
+                    ],
+                    properties: {}
                 },
                 {
                     caption: "Details",
@@ -196,9 +205,11 @@ describe( 'AlRoute', () => {
                         type: "link",
                         location: AlLocation.IncidentsUI,
                         path: '/#/'
-                    }
+                    },
+                    properties: {}
                 }
-            ]
+            ],
+            properties: {}
         };
 
         it( "should be interpreted with a correct initial state", () => {
