@@ -72,10 +72,11 @@ export interface AlRouteAction
 
     /**
      * If the route action is 'link' (default), these properties indicate which application (location)
-     * and route (path) the link should point to.
+     * and route (path) OR url (fully qualified) the link should point to.
      */
     location?:string;
     path?:string;
+    url?:string;
 
     /**
      * If the type of the action is 'trigger', this is the name of the event to be triggered.
