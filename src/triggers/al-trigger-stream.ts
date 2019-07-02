@@ -58,6 +58,15 @@ export class AlTriggeredEvent
 
 export declare type AlTriggeredEventCallback = {(event:AlTriggeredEvent,subscriptionId?:string):void};
 
+export class AlTriggerSubscription
+{
+    constructor( public stream:AlTriggerStream, public listenerId:string ) {}
+
+    cancel() {
+        this.stream.detach( this.listenerId );
+    }
+}
+
 export class AlTriggerStream
 {
     items:{[triggerType:string]:{[subscriptionId:string]:AlTriggeredEventCallback}} = {};
@@ -77,11 +86,15 @@ export class AlTriggerStream
         return this.items[eventTypeName];
     }
 
-    public attach( eventType:string, callback:AlTriggeredEventCallback ):string {
+    public attach( eventType:string, callback:AlTriggeredEventCallback, subscriptionGroup?:AlSubscriptionGroup ):AlTriggerSubscription {
         let bucket = this.getBucket( eventType );
         const listenerId:string = `sub_${++this.subscriptionCount}`;
         bucket[listenerId] = callback;
-        return listenerId;
+        let subscription = new AlTriggerSubscription( this, listenerId );
+        if ( subscriptionGroup ) {
+            subscriptionGroup.manage( subscription );
+        }
+        return subscription;
     }
 
     public detach( listenerId:string ) {
@@ -125,5 +138,50 @@ export class AlTriggerStream
             let event = this.captured.shift();
             this.trigger( event );
         }
+    }
+}
+
+/**
+ * This is a simple utility to manage a list of subscriptions, which may be AlTriggerSubscriptions or RxJS subscriptions.
+ * It exposes a method `manage` to add new subscriptions, and a method `cancelAll` to unsubscribe from all subscriptions.
+ * That is all it does.
+ */
+export class AlSubscriptionGroup
+{
+    subscriptions:any[] = [];
+
+    constructor( item:any|any[] ) {
+        if ( item ) {
+            this.manage( item );
+        }
+    }
+
+    /**
+     * Adds one or more subscriptions (as themselves, in arrays, via callback function, or some mixture of these inputs)
+     * to the internal list of managed items.
+     */
+    public manage( item:any|any[] ) {
+        if ( typeof( item ) === 'object' && item.length ) {
+            item.map( subitem => this.manage( subitem ) );
+            return;
+        } else if ( typeof( item ) === 'function' ) {
+            this.manage( item() );
+            return;
+        }
+        this.subscriptions.push( item );
+    }
+
+    /**
+     * Cancels/unsubscribes from all subscriptions.
+     */
+    public cancelAll() {
+        this.subscriptions.map( subscription => {
+            if ( typeof( subscription.cancel ) === 'function' ) {
+                subscription.cancel();
+            } else if ( typeof( subscription.unsubscribe ) === 'function' ) {
+                subscription.unsubscribe();
+            }
+        } );
+        this.subscriptions = [];
     }
 }

@@ -1,1 +1,1 @@
-export { AlTriggeredEvent, AlTriggerStream } from './al-trigger-stream';
+export * from './al-trigger-stream';
