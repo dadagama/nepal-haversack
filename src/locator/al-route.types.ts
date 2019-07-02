@@ -18,6 +18,9 @@ export interface AlRoutingHost
 
     /* Routing parameters */
     routeParameters: {[parameter:string]:string};
+    setRouteParameter( parameter:string, value:string ):void;
+    deleteRouteParameter( parameter:string ):void;
+
 
     /* Asks the host to execute a given route's action. */
     dispatch(route:AlRoute):void;
@@ -34,6 +37,12 @@ export interface AlRoutingHost
 export const AlNullRoutingHost = {
     currentUrl: '',
     routeParameters: {},
+    setRouteParameter: ( parameter:string, value:string ) => {
+        this.routeParameters[parameter] = value;
+    },
+    deleteRouteParameter: ( parameter:string ) => {
+        delete this.routeParameters[parameter];
+    },
     dispatch: (route:AlRoute) => {},
     evaluate: (condition:AlRouteCondition) => false
 };
@@ -78,8 +87,6 @@ export interface AlRouteAction
  *  This is an abstract definition for a single menu item or menu container.
  */
 export interface AlRouteDefinition {
-    /* A unique identifier for a route or item that can be invoked programmatically */
-    id?:string;
 
     /* The caption of the menu item */
     caption:string;
@@ -359,4 +366,5 @@ export interface AlNavigationSchema
     name: string;
     description: string;
     menus: {[menuId:string]:AlRouteDefinition};
+    namedRoutes: {[routeId:string]:AlRouteAction};
 }
