@@ -34,6 +34,12 @@ describe( 'AlRoute', () => {
         routeParameters: {
             accountId: "2",
             deploymentId: "1234ABCD-1234-ABCD1234"
+        },
+        setRouteParameter: (parameter:string, value:string) => {
+            this.routeParameters[parameter] = value;
+        },
+        deleteRouteParameter: (parameter:string) => {
+            delete this.routeParameters[parameter];
         }
     };
 

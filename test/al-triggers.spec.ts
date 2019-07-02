@@ -32,7 +32,7 @@ describe( 'AlTriggerStream', () => {
     it("should allow 'bottled' initialization", () => {
         const stream = new AlTriggerStream( false );
 
-        let subscriptionKey = stream.attach( "EventType1", emptyHandler );
+        let subscription = stream.attach( "EventType1", emptyHandler );
 
         stream.trigger( new EventType1() );
 
@@ -40,20 +40,19 @@ describe( 'AlTriggerStream', () => {
         expect( stream.captured.length ).to.equal( 1 );
         expect( stream.flowing ).to.equal( false );
 
-        stream.detach( subscriptionKey );
-
+        subscription.cancel();
     } );
 
     it("should allow one stream to siphon the events from another stream", () => {
         const stream = new AlTriggerStream( false );
 
-        let subscriptionKey = stream.attach( "EventType1", emptyHandler );
+        let subscription = stream.attach( "EventType1", emptyHandler );
 
         stream.trigger( new EventType1() );
 
         const stream2 = new AlTriggerStream();
 
-        let subscriptionKey2 = stream2.attach( "EventType1", emptyHandler );
+        let subscription2 = stream2.attach( "EventType1", emptyHandler );
 
         stream2.siphon( stream );
 
@@ -62,18 +61,18 @@ describe( 'AlTriggerStream', () => {
         expect( stream2.subscriptionCount ).to.equal( 1 );
         expect( handlerCallCount ).to.equal( 2 );
 
-        stream.detach( subscriptionKey );
-        stream.detach( subscriptionKey2 );
+        subscription.cancel();
+        subscription2.cancel();
     } );
 
     it("should collate and return responses systematically", () => {
         const stream = new AlTriggerStream();
 
-        const subscriptionKey = stream.attach( "EventType1", ( event ) => {
+        const subscription = stream.attach( "EventType1", ( event ) => {
             event.respond( true );
         } );
 
-        const subscriptionKey2 = stream.attach( "EventType1", ( event ) => {
+        const subscription2 = stream.attach( "EventType1", ( event ) => {
             event.respond( "Kevin" );
         } );
 
@@ -100,8 +99,8 @@ describe( 'AlTriggerStream', () => {
         expect( response2 ).to.equal( "Kevin" );
         expect( response3 ).to.equal( undefined );
 
-        stream.detach( subscriptionKey );
-        stream.detach( subscriptionKey2 );
+        subscription.cancel();
+        subscription2.cancel();
     } );
 
 
