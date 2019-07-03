@@ -229,12 +229,11 @@ export class AlRoute {
 
         /* Evaluate fully qualified href, if visible/relevant */
         let action:AlRouteAction = this.getRouteAction();
-        if ( ! action ) {
-            return this.disable();
-        }
-        if ( this.visible && ( resolve || this.href === null ) && action && action.type === 'link' ) {
-            if ( ! this.evaluateHref( action ) ) {
-                return this.disable();
+        if ( action ) {
+            if ( this.visible && ( resolve || this.href === null ) && action.type === 'link' ) {
+                if ( ! this.evaluateHref( action ) ) {
+                    return this.disable();
+                }
             }
         }
 
