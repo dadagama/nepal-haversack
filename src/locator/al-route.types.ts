@@ -13,7 +13,10 @@ import { AlLocatorService } from './al-locator.service';
  */
 export interface AlRoutingHost
 {
-    /* Exposes the current URL of the application */
+    /* Exposes the effective navigation schema, if available (not required). */
+    schema?:AlNavigationSchema;
+
+    /* Exposes the current URL of the application (required). */
     currentUrl:string;
 
     /* Routing parameters */
@@ -21,9 +24,8 @@ export interface AlRoutingHost
     setRouteParameter( parameter:string, value:string ):void;
     deleteRouteParameter( parameter:string ):void;
 
-
     /* Asks the host to execute a given route's action. */
-    dispatch(route:AlRoute):void;
+    dispatch(route:AlRoute, params?:{[param:string]:string}):void;
 
     /* Asks the host to evaluate whether a given routing condition is true or false */
     evaluate(condition:AlRouteCondition):boolean;
@@ -65,8 +67,7 @@ export interface AlRouteCondition
 export interface AlRouteAction
 {
     /**
-     *  What type of action does this route have?  This will default to 'link'
-     *  but could also be 'trigger', and who knows what the future holds?
+     *  What type of action does this route have?  Valid types are 'link' and 'trigger'.
      */
     type:string;
 
@@ -95,8 +96,9 @@ export interface AlRouteDefinition {
     /* Arbitrary properties */
     properties: {[property:string]:any};
 
-    /* The action to perform when the menu item is clicked.     */
-    action?:AlRouteAction;
+    /* The action to perform when the menu item is clicked.
+     * If the provided value is a string, it will be treated as a reference to a named route in the current schema. */
+    action?:AlRouteAction|string;
 
     /* A condition that can be evaluated to calculate the `visible` property at any given moment */
     visible?:AlRouteCondition;
@@ -226,11 +228,13 @@ export class AlRoute {
                                                     false );
 
         /* Evaluate fully qualified href, if visible/relevant */
-        if ( this.visible && ( resolve || this.href === null ) && this.definition.action && this.definition.action.type === 'link' ) {
-            if ( ! this.evaluateHref() ) {
-                this.visible = false;
-                this.activated = false;
-                return;
+        let action:AlRouteAction = this.getRouteAction();
+        if ( ! action ) {
+            return this.disable();
+        }
+        if ( this.visible && ( resolve || this.href === null ) && action && action.type === 'link' ) {
+            if ( ! this.evaluateHref( action ) ) {
+                return this.disable();
             }
         }
 
@@ -248,6 +252,15 @@ export class AlRoute {
         }
 
         return this.activated;
+    }
+
+    /**
+     * Disables a route
+     */
+    disable():boolean {
+        this.activated = false;
+        this.visible = false;
+        return false;
     }
 
     /**
@@ -281,8 +294,7 @@ export class AlRoute {
     /**
      * Helper Messages
      */
-    evaluateHref():boolean {
-        let action = this.definition.action;
+    evaluateHref( action:AlRouteAction ):boolean {
         let node = AlLocatorService.getNode( action.location );
         if ( ! node ) {
             console.warn(`Warning: cannot link to unknown location '${action.location}'` );
@@ -357,6 +369,18 @@ export class AlRoute {
             return this.host.evaluate( condition );
         }
     }
+
+    getRouteAction():AlRouteAction {
+        if ( typeof( this.definition.action ) === 'string' ) {
+            if ( this.host.schema && this.host.schema.namedRoutes && this.host.schema.namedRoutes.hasOwnProperty( this.definition.action ) ) {
+                return this.host.schema.namedRoutes[this.definition.action].action as AlRouteAction;
+            }
+            return null;
+        } else if ( typeof( this.definition.action ) === 'object' ) {
+            return this.definition.action;
+        }
+        return null;
+    }
 }
 
 /**
@@ -367,5 +391,5 @@ export interface AlNavigationSchema
     name: string;
     description: string;
     menus: {[menuId:string]:AlRouteDefinition};
-    namedRoutes: {[routeId:string]:AlRouteAction};
+    namedRoutes: {[routeId:string]:AlRouteDefinition};
 }
